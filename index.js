@@ -6,13 +6,22 @@ var option1El = document.getElementById("option1");
 var option2El = document.getElementById("option2");
 var option3El = document.getElementById("option3");
 var option4El = document.getElementById("option4");
+var evaluateEl = document.getElementById("evaluate")
 var startEl = document.getElementById("start");
 var timerObj;
-var timerCounter = 2000;
+var timerCounter = 60;
+var currentQuestion = 0;
+var score = 0;
+var summaryEl = document.getElementById("summary");
+summaryEl.style.display = "none";
+option1El.addEventListener("click",checkAnswer);
+option2El.addEventListener("click",checkAnswer);
+option3El.addEventListener("click",checkAnswer);
+option4El.addEventListener("click",checkAnswer);
 
 var question_database = [
     {
-        question:"what does HTML stand for? ",
+        question:"What does HTML stand for? ",
         choiceA:"Hyper Text Makeup language ",
         choiceB:"Henry Talks More than Larry ",
         choiceC:"Hyper Text Markup Language ",
@@ -64,15 +73,62 @@ startEl.addEventListener("click",function(){
         }else{
             endQuiz()
         }
-    })
+    }, 1000)
     displayQuestion()
 })
 
 function endQuiz(){
     clearInterval(timerObj)
+    quizEl.style.display = "none";
+    summaryEl.style.display = "block";
+    document.getElementById("score-result").textContent = timerCounter * score;
+    document.getElementById("save-userscore").addEventListener("click", saveDetails)
 }
 
 
 function displayQuestion(){
-    
+    questionEl.textContent = question_database[currentQuestion].question;
+    option1El.textContent = question_database[currentQuestion].choiceA
+    option2El.textContent = question_database[currentQuestion].choiceB
+    option3El.textContent = question_database[currentQuestion].choiceC
+    option4El.textContent = question_database[currentQuestion].choiceD
+
 };
+
+function checkAnswer(event){
+    var userAnswer = event.target.textContent;
+    console.log("choice sel",userAnswer)
+    if(userAnswer == question_database[currentQuestion].answer){
+        score += 5;
+    evaluateEl.textContent = "You got it right!"
+    }else {
+        timerCounter -= 5;
+        evaluateEl.textContent = "You got it wrong :( "
+    }
+    scoreEl.textContent = "Score : "+score;
+    if (currentQuestion < question_database.length - 1){
+        currentQuestion++;
+        displayQuestion();
+    }else {
+        endQuiz();
+    }
+};
+
+
+function saveDetails(event){
+    event.preventDefault()
+    var user = document.getElementById("user-name").value
+    var previousScore = JSON.parse(localStorage.getItem("codequiz")) || []
+    previousScore.push({
+        user:user,
+        finalScore: timerCounter * score
+    })
+    localStorage.setItem("codequiz",JSON.stringify(previousScore))
+    summaryEl.style.display = "none";
+    var htmlString = ""
+    for(let i=0;i<previousScore.length;i++){
+        htmlString += `<h5>User:${previousScore[i].user} ----- ${previousScore[i].finalScore}`
+    }
+    htmlString += `<br /><br /><a class="btn btn-danger" href="/">Retake Quiz</a>`
+    document.getElementById("displayStorage").innerHTML = htmlString;
+}
